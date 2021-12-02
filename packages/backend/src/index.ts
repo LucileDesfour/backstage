@@ -38,6 +38,7 @@ import { Config } from '@backstage/config';
 import healthcheck from './plugins/healthcheck';
 import { metricsInit, metricsHandler } from './metrics';
 import auth from './plugins/auth';
+import aws from './plugins/aws';
 import azureDevOps from './plugins/azure-devops';
 import catalog from './plugins/catalog';
 import codeCoverage from './plugins/codecoverage';
@@ -96,6 +97,7 @@ async function main() {
   );
   const scaffolderEnv = useHotMemoize(module, () => createEnv('scaffolder'));
   const authEnv = useHotMemoize(module, () => createEnv('auth'));
+  const awsEnv = useHotMemoize(module, () => createEnv('aws'));
   const azureDevOpsEnv = useHotMemoize(module, () => createEnv('azure-devops'));
   const proxyEnv = useHotMemoize(module, () => createEnv('proxy'));
   const rollbarEnv = useHotMemoize(module, () => createEnv('rollbar'));
@@ -113,6 +115,7 @@ async function main() {
   );
 
   const apiRouter = Router();
+  apiRouter.use('/aws', await aws(awsEnv));
   apiRouter.use('/catalog', await catalog(catalogEnv));
   apiRouter.use('/code-coverage', await codeCoverage(codeCoverageEnv));
   apiRouter.use('/rollbar', await rollbar(rollbarEnv));

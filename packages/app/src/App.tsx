@@ -85,6 +85,7 @@ import { providers } from './identityProviders';
 import * as plugins from './plugins';
 
 import { techDocsPage } from './components/techdocs/TechDocsPage';
+import { EcsSecretManagerBackendPage } from '@backstage/plugin-ecs-secret-manager-backend';
 
 const app = createApp({
   apis,
@@ -203,6 +204,7 @@ const routes = (
       element={<CostInsightsLabelDataflowInstructionsPage />}
     />
     <Route path="/settings" element={<UserSettingsPage />} />
+    <Route path="/ecs-secret-manager-backend" element={<EcsSecretManagerBackendPage />}/>
   </FlatRoutes>
 );
 

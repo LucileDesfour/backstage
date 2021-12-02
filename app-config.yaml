@@ -136,6 +136,8 @@ kafka:
 allure:
   baseUrl: http://localhost:5050/allure-docker-service
 
+
+
 integrations:
   github:
     - host: github.com
@@ -168,8 +170,11 @@ integrations:
   #    privateKey: ${GCS_PRIVATE_KEY}
   awsS3:
     - host: amazonaws.com
-      accessKeyId: ${AWS_ACCESS_KEY_ID}
-      secretAccessKey: ${AWS_SECRET_ACCESS_KEY}
+      accessKeyId: 
+      secretAccessKey: 
+aws:
+  accessKeyId: 
+  secretAccessKey: 
 
 catalog:
   rules:
