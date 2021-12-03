@@ -69,6 +69,7 @@ import {
   isCloudbuildAvailable,
 } from '@backstage/plugin-cloudbuild';
 import { EntityCodeCoverageContent } from '@backstage/plugin-code-coverage';
+import { TaskDefinition } from '@backstage/plugin-ecs-secret-manager-backend/src/components/TaskDefinition';
 import {
   EntityGithubActionsContent,
   EntityRecentGithubActionsRunsCard,
@@ -210,6 +211,15 @@ export const cicdContent = (
   </EntitySwitch>
 );
 
+const awsContent = (
+  <EntitySwitch>
+    <EntitySwitch.Case>
+      <Grid item sm={6}>
+        <TaskDefinition />
+      </Grid>
+    </EntitySwitch.Case>
+  </EntitySwitch>
+);
 const cicdCard = (
   <EntitySwitch>
     <EntitySwitch.Case if={isJenkinsAvailable}>
@@ -333,9 +343,15 @@ const serviceEntityPage = (
       {cicdContent}
     </EntityLayout.Route>
 
+    <EntityLayout.Route path="/aws" title="AWS">
+      {awsContent}
+    </EntityLayout.Route>
+
     <EntityLayout.Route path="/errors" title="Errors">
       {errorsContent}
     </EntityLayout.Route>
+
+    
 
     <EntityLayout.Route path="/api" title="API">
       <Grid container spacing={3} alignItems="stretch">
@@ -397,6 +413,10 @@ const websiteEntityPage = (
 
     <EntityLayout.Route path="/ci-cd" title="CI/CD">
       {cicdContent}
+    </EntityLayout.Route>
+
+    <EntityLayout.Route path="/aws" title="AWS">
+      {awsContent}
     </EntityLayout.Route>
 
     <EntityLayout.Route path="/lighthouse" title="Lighthouse">
@@ -470,7 +490,9 @@ const componentPage = (
       {websiteEntityPage}
     </EntitySwitch.Case>
 
-    <EntitySwitch.Case>{defaultEntityPage}</EntitySwitch.Case>
+    <EntitySwitch.Case>
+      {defaultEntityPage}
+    </EntitySwitch.Case>
   </EntitySwitch>
 );
 
@@ -605,6 +627,7 @@ const domainPage = (
     </EntityLayout.Route>
   </EntityLayoutWrapper>
 );
+
 
 export const entityPage = (
   <EntitySwitch>

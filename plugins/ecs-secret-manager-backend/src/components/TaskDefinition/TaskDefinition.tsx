@@ -23,33 +23,49 @@ import {
   ContentHeader,
   HeaderLabel,
   SupportButton,
+  Table,
+  TableColumn,
 } from '@backstage/core-components';
 import { ExampleFetchComponent } from '../ExampleFetchComponent';
 import { listSecrets } from '../../api'
 
+const columns: TableColumn[] = [
+  { title: 'Secret Name', field: 'Name' },
+  { title: 'Created Date', field: 'CreatedDate' },
+  { title: 'Last Changed Date', field: 'LastChangedDate' },
+];
+
 export const TaskDefinition = () => {
 
-  const data = listSecrets();
+  const {loading, secrets} = listSecrets();
+
+  const formatedSecrets = secrets?.map(secret => {
+    return {
+      Name: secret.Name,
+      CreatedDate: secret.CreatedDate.toDateString(),
+      LastChangedDate: secret.LastChangedDate.toDateString(),
+    };
+  });
+
   return (
   <Page themeId="tool">
-    <Header title="Welcome to ecs-secret-manager-backend!" subtitle="Optional subtitle">
-      <HeaderLabel label="Owner" value="Team X" />
-      <HeaderLabel label="Lifecycle" value="Alpha" />
+    <Header title="AWS" subtitle="">
+
     </Header>
     <Content>
-      <ContentHeader title="Plugin title">
+      <ContentHeader title="Secret Managment">
         <SupportButton>A description of your plugin goes here.</SupportButton>
       </ContentHeader>
       <Grid container spacing={3} direction="column">
         <Grid item>
-          <InfoCard title="Information card">
-            <Typography variant="body1">
-              All content should be wrapped in a card like this.
-            </Typography>
-          </InfoCard>
-        </Grid>
-        <Grid item>
-          <ExampleFetchComponent />
+          <Table
+            title="Environment Secret Keys"
+            isLoading={loading}
+            options={{search: false, paging: false}}
+            totalCount={formatedSecrets?.length}
+            columns={columns}
+            data={formatedSecrets ?? []}
+          />
         </Grid>
       </Grid>
     </Content>

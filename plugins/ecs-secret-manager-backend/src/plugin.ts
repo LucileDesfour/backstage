@@ -20,7 +20,7 @@ import { rootRouteRef } from './routes';
 export const ecsSecretManagerBackendPlugin = createPlugin({
   id: 'ecs-secret-manager-backend',
   routes: {
-    root: rootRouteRef,
+    entityContent: rootRouteRef,
   },
 });
 

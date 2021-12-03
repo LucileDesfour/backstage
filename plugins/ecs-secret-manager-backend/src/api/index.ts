@@ -20,10 +20,16 @@ import { configApiRef, useApi} from '@backstage/core-plugin-api';
 // const { ECSClient, ListTaskDefinitionsCommand } = require("@aws-sdk/client-ecs");
 import { ECSClient, ListTaskDefinitionsCommand } from "@aws-sdk/client-ecs"
 import { SecretsManagerClient, ListSecretsCommand, Filter } from "@aws-sdk/client-secrets-manager"; // ES Modules import
-import {  AwsConfig, readAwsConfigs } from '../config';
-import { Credentials } from 'aws-sdk/lib/credentials';
-import { Config } from '@backstage/config';
+import { readAwsConfigs } from '../config';
+import { useEntity } from '@backstage/plugin-catalog-react';
+import { useEffect, useState } from 'react';
 
+const FILTER_KEY = "tag-value";
+
+const useProjectId = () => {
+    const { entity } = useEntity();
+    return entity.metadata.name;
+}
 
 export async function listTaskDefinition() {
     const client = new ECSClient({ region: "us-east-2" });
@@ -39,29 +45,64 @@ export async function listTaskDefinition() {
     }
 }
 
-export async function listSecrets() {
+export type Secret = {
+    CreatedDate: Date,
+    LastChangedDate: Date,
+    Name: string
+}
+
+type FetchSecret = {
+    secrets: Secret[],
+    loading: boolean
+}
+
+export const listSecrets = (): FetchSecret => {
+
+    const [secrets, setSecrets] = useState<Secret[]>([])
+    const [loading, setLoading] = useState<boolean>(true)
 
     const config = useApi(configApiRef)
 
     const configAWS = readAwsConfigs(config.getConfig('aws'))
 
     const filter: Filter = {
-        Key: "tag-value",
-        Values: ["MyApp"]
+        Key: FILTER_KEY,
+        Values: [useProjectId()]
     };
 
-    const client = new SecretsManagerClient({ region: "us-east-2", credentials: {accessKeyId: configAWS.accessKeyId, secretAccessKey: configAWS.secretAccessKey}});
+    const client = new SecretsManagerClient({ 
+        region: configAWS.region, 
+        credentials: {
+            accessKeyId: configAWS.accessKeyId, 
+            secretAccessKey: configAWS.secretAccessKey
+        }
+    });
+    
     const params = {
         Filters: [filter]
     };
 
-    const command = new ListSecretsCommand(params);
-    try {
-        const data = await client.send(command);
-        // process data.
-        return data;
-      } catch (error) {
-          return error
-        // error handling.
-    }
+    useEffect(() => {
+        (async () => {
+            console.log("i go there")
+            const command = new ListSecretsCommand(params);
+            const data = await client.send(command);
+            console.log(data)
+            data.SecretList?.forEach(function (secret) {
+                secrets.push({CreatedDate: secret?.CreatedDate as Date, LastChangedDate: secret?.LastChangedDate as Date, Name: secret.Name as string})
+            })
+            console.log(secrets)
+            const formatedSecrets = secrets.map(secret => {
+                return {
+                  Name: secret.Name,
+                  CreatedDate: secret.CreatedDate,
+                  LastChangedDate: secret.LastChangedDate,
+                };
+              });
+            setSecrets(formatedSecrets)
+            setLoading(false)
+        })();
+    }, []);
+
+    return {loading, secrets}
 }

@@ -25,12 +25,18 @@ export type AwsConfig = {
   /**
    * accessKeyId
    */
-    accessKeyId: string;
+  accessKeyId: string;
 
   /**
    * secretAccessKey
    */
-    secretAccessKey: string;
+  secretAccessKey: string;
+
+
+  /**
+   * region
+   */
+   region: string;
 };
 
 /**
@@ -45,8 +51,9 @@ export function readAwsConfig(
 ): AwsConfig {
   const accessKeyId = config.getString('accessKeyId');
   const secretAccessKey = config.getString('secretAccessKey');
+  const region = config.getString('region');
 
-  return { accessKeyId, secretAccessKey };
+  return { accessKeyId, secretAccessKey, region };
 }
 
 /**

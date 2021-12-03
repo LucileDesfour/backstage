@@ -27,5 +27,11 @@ export interface Config {
      * @visibility frontend
      */
     secretAccessKey: string;
+
+    /**
+     * The region used for aws auth
+     * @visibility frontend
+     */
+    region: string;
   };
 }
