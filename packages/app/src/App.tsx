@@ -85,7 +85,7 @@ import { providers } from './identityProviders';
 import * as plugins from './plugins';
 
 import { techDocsPage } from './components/techdocs/TechDocsPage';
-import { EcsSecretManagerBackendPage } from '@backstage/plugin-ecs-secret-manager-backend';
+import { EcsSecretManagerBackendPage } from '@backstage/plugin-secrets-backend';
 
 const app = createApp({
   apis,

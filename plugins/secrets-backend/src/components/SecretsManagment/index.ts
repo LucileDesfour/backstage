@@ -13,22 +13,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { createPlugin, createRoutableExtension } from '@backstage/core-plugin-api';
-
-import { rootRouteRef } from './routes';
-
-export const ecsSecretManagerBackendPlugin = createPlugin({
-  id: 'ecs-secret-manager-backend',
-  routes: {
-    entityContent: rootRouteRef,
-  },
-});
-
-export const EcsSecretManagerBackendPage = ecsSecretManagerBackendPlugin.provide(
-  createRoutableExtension({
-    name: 'EcsSecretManagerBackendPage',
-    component: () =>
-      import('./components/TaskDefinition').then(m => m.TaskDefinition),
-    mountPoint: rootRouteRef,
-  }),
-);
+export { SecretsManagment } from './SecretsManagment';

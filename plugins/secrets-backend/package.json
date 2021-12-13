@@ -1,5 +1,5 @@
 {
-  "name": "@backstage/plugin-ecs-secret-manager-backend",
+  "name": "@backstage/plugin-secrets-backend",
   "version": "0.1.0",
   "main": "src/index.ts",
   "types": "src/index.ts",
