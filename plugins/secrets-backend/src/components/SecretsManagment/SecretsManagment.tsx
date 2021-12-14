@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 import React, { useState } from 'react';
-import { Typography, Grid, TextField, Button, IconButton } from '@material-ui/core';
+import { Box, Grid, IconButton } from '@material-ui/core';
 import {
-  InfoCard,
   Header,
   Page,
   Content,
   ContentHeader,
-  HeaderLabel,
-  SupportButton,
   Table,
   TableColumn,
 } from '@backstage/core-components';
-import { ExampleFetchComponent } from '../ExampleFetchComponent';
-import { listSecrets, updateSecrets, useClient, useProjectId } from '../../api'
-import { Delete, Edit, Add} from '@material-ui/icons';
+import { useSecrets, useProjectId } from '../../api'
+import { Delete, Edit} from '@material-ui/icons';
 import { AddSecretComponent } from '../AddSecret/AddSecretComponent';
 
 
@@ -43,15 +39,15 @@ const columns: TableColumn[] = [
     return (
       <div>
         <IconButton
-          onClick={(event) => {
-            handleDelete(event, value);
+          onClick={() => {
+            handleDelete(value);
           }}
         >
           <Delete/>
         </IconButton>
         <IconButton
-          onClick={(event) => {
-            handleEdit(event, value);
+          onClick={() => {
+            handleEdit(value);
           }}
         >
           <Edit/>
@@ -60,34 +56,31 @@ const columns: TableColumn[] = [
     )
   }}
   ];
-
-  const {loading, secrets} = listSecrets();
-
+  
   const [appName] = useState(useProjectId());
-  const [client] = useState(useClient());
+  const secrets = useSecrets(appName);
+  
   const [currentSecret, setCurrentSecret] = useState('');
   const [currentValue, setCurrentValue] = useState('');
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
 
 
-  const formatedSecrets = secrets?.map((secret) => {
+  const formatedSecrets = secrets?.secrets?.map((secret) => {
     return {
       Name: secret.Name,
       Value: secret.Value
-
     };
   });
 
-  async function handleEdit(event: React.MouseEvent<HTMLButtonElement, MouseEvent>, secret: any) {
+  async function handleEdit(secret: any) {
     setCurrentSecret(secret.Name)
     setCurrentValue(secret.Value)
     setOpen(true)
-  
   }
   
-  function handleDelete(event: React.MouseEvent<HTMLButtonElement, MouseEvent>, value: any) {
-    console.log("delete button")
-    console.log(value)
+  async function handleDelete(secret: any) {
+    console.log(secret)
+    await secrets.delete(secret.Name)
   }
 
   return (
@@ -97,14 +90,15 @@ const columns: TableColumn[] = [
     </Header>
     <Content>
       <ContentHeader title="Secret Managment">
-        <SupportButton>A description of your plugin goes here.</SupportButton>
       </ContentHeader>
-        <AddSecretComponent open={open} setOpen={setOpen} appName={appName} client={client} currentSecret={currentSecret} currentValue={currentValue} />
+      <Box m={2}>
+        <AddSecretComponent open={open} setOpen={setOpen} appName={appName}  currentSecret={currentSecret} setCurrentSecret={setCurrentSecret} currentValue={currentValue} setCurrentValue={setCurrentValue} secrets={secrets} />
+      </Box>
       <Grid container spacing={3} direction="column">
         <Grid item>
           <Table
             title="Environment Secret Keys"
-            isLoading={loading}
+            isLoading={secrets.loading}
             options={{search: false, paging: false}}
             totalCount={formatedSecrets?.length}
             columns={columns}

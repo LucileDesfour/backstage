@@ -13,65 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
-import { Modal, Button, TextField, makeStyles, Box } from '@material-ui/core';
-import {
-  InfoCard,
-  Header,
-  Page,
-  Content,
-  ContentHeader,
-  HeaderLabel,
-  SupportButton,
-} from '@backstage/core-components';
+import React, { FormEvent } from 'react';
+import { Modal, Button, TextField, Box } from '@material-ui/core';
 import { Add } from '@material-ui/icons';
-import { updateSecrets, useClient, useProjectId } from '../../api';
-import { useEntity } from '@backstage/plugin-catalog-react/src/hooks/useEntity';
-import { SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
+import { FetchSecret } from '../../api';
 
-function getModalStyle() {
-    const top = 50;
-    const left = 50;
-    return {
-        top: `${top}%`,
-        left: `${left}%`,
-        transform: `translate(-${top}%, -${left}%)`,
-    };
+export interface AddSecretComponentProps {
+    open: boolean,
+    setOpen: any,
+    appName: string;
+    currentSecret: string,
+    setCurrentSecret: any,
+    currentValue: string,
+    setCurrentValue: any,
+    secrets: FetchSecret
 }
 
-const useStyles = makeStyles(theme => ({
-    modal: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    paper: {
-        position: 'absolute',
-        width: 450,
-        backgroundColor: theme.palette.background.paper,
-        boxShadow: theme.shadows[5],
-        padding: theme.spacing(2, 4, 3),
-    },
-}));
-
-export const AddSecretComponent = forwardRef((props: { open: boolean, setOpen: any, appName: string; client: SecretsManagerClient, currentSecret: string, currentValue: string }) => {
+export const AddSecretComponent = ({secrets, ...props}: AddSecretComponentProps) => {
     const [name, setName] = React.useState('');
     const [value, setValue] = React.useState('');
 
-    const classes = useStyles();
-    const [modalStyle] = React.useState(getModalStyle);
-
-
-
-    console.log("props")
-    console.log(props.open)
-
-    const appName = props.appName;
-    const client = props.client;
+    const [title, setTitle] = React.useState('Create secret');
 
     const handleOpen = () => {
-        console.log("open modal")
         props.setOpen(true);
+        props.setCurrentSecret('')
+        props.setCurrentValue('')
     };
 
     const handleClose = () => {
@@ -80,16 +47,17 @@ export const AddSecretComponent = forwardRef((props: { open: boolean, setOpen: a
 
     const handleSubmit = async (event: React.FormEvent<HTMLInputElement>) => {  
         event.preventDefault();
-        await updateSecrets(name, value, appName, client);
-        window.location.reload();
-
+        await secrets.add(name, value)
+        handleClose()
     }
 
     React.useEffect(() => {
-      console.log("lol")
-      console.log(props)
       setName(props.currentSecret)
       setValue(props.currentValue)
+
+      if (props.currentSecret != '') {
+          setTitle("Update ")
+      } else setTitle("Add ")
     }, [props.open]);
     
     return (
@@ -99,11 +67,16 @@ export const AddSecretComponent = forwardRef((props: { open: boolean, setOpen: a
                 aria-labelledby="simple-modal-title"
                 aria-describedby="simple-modal-description"
                 open={props.open}
-                onClose={handleClose}
+                style={{display:'flex',alignItems:'center',justifyContent:'center'}}                onClose={handleClose}
             >
-                <div style={modalStyle} className={classes.paper} onSubmit={(e) => handleSubmit(e)}>                  
-                <h2>Add a new secret</h2>
-                <Box m={1} p={2}>
+                <Box onSubmit={(e) => handleSubmit(e as FormEvent<HTMLInputElement>)} sx={{
+                    width: 400,
+                    bgcolor: 'background.paper',
+                    boxShadow: 24,
+                    p: 4,
+                }}>
+                <h2>{title} Secret</h2>
+                <Box m={2} p={3} >
                     <form>
                         <TextField
                             id="input-name"
@@ -119,13 +92,13 @@ export const AddSecretComponent = forwardRef((props: { open: boolean, setOpen: a
                                 value={value}
                                 onChange={ e=>setValue(e.target.value)}
                         />
-                        <Button type="submit"> 
-                            Add
-                        </Button>
+                        <Box m={2} sx={{ display: 'flex', flexDirection: 'row-reverse'}}>
+                            <Button variant="contained" startIcon={<Add />} color="primary" type="submit">{title}</Button>
+                        </Box>
                     </form>
                 </Box>
-                </div>
+                </Box>
             </Modal>
         </div>
     );
-});
+};

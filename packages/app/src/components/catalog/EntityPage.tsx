@@ -69,7 +69,7 @@ import {
   isCloudbuildAvailable,
 } from '@backstage/plugin-cloudbuild';
 import { EntityCodeCoverageContent } from '@backstage/plugin-code-coverage';
-import { TaskDefinition } from '@backstage/plugin-ecs-secret-manager-backend/src/components/TaskDefinition';
+import { SecretsManagment } from '@backstage/plugin-secrets-backend/src/components/SecretsManagment';
 import {
   EntityGithubActionsContent,
   EntityRecentGithubActionsRunsCard,
@@ -215,7 +215,7 @@ const awsContent = (
   <EntitySwitch>
     <EntitySwitch.Case>
       <Grid item sm={6}>
-        <TaskDefinition />
+        <SecretsManagment />
       </Grid>
     </EntitySwitch.Case>
   </EntitySwitch>

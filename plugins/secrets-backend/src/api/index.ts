@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2020 The Backstage Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,14 +17,10 @@
 
 import { configApiRef, useApi} from '@backstage/core-plugin-api';
 
-// const { ECSClient, ListTaskDefinitionsCommand } = require("@aws-sdk/client-ecs");
-import { ECSClient, ListTaskDefinitionsCommand } from "@aws-sdk/client-ecs"
-import { SecretsManagerClient, ListSecretsCommand, Filter, GetSecretValueCommand, SecretListEntry, UpdateSecretCommand } from "@aws-sdk/client-secrets-manager"; // ES Modules import
+import { SecretsManagerClient, GetSecretValueCommand, UpdateSecretCommand } from "@aws-sdk/client-secrets-manager"; // ES Modules import
 import { readAwsConfigs } from '../config';
 import { useEntity } from '@backstage/plugin-catalog-react';
-import { useEffect, useState } from 'react';
-
-const FILTER_KEY = "name";
+import { useEffect, useState, useCallback } from 'react';
 
 export const useProjectId = () => {
     const { entity } = useEntity();
@@ -49,9 +45,12 @@ export type Secret = {
     Name: string
 }
 
-type FetchSecret = {
+export type FetchSecret = {
     secrets: Secret[],
     loading: boolean
+    refresh: () => void
+    add: (secretKey : string, secretValue : string) => Promise<void>
+    delete: (secretKey: string) => Promise<void>
 }
 
 
@@ -76,36 +75,50 @@ const parseSecret = async (secretName: string, client: SecretsManagerClient, sec
     })
 }
 
-export const listSecrets = (): FetchSecret => {
+export const useSecrets = (appName: string): FetchSecret => {
 
     const [secrets, setSecrets] = useState<Secret[]>([])
     const [loading, setLoading] = useState<boolean>(true)
 
-    const secretName = useProjectId();
-
     const client = useClient()
 
+    const refresh = useCallback(async () => {
+        await parseSecret(appName, client, secrets)
+
+        setSecrets(secrets)
+        setLoading(false)
+        return {loading, secrets}
+    }, [appName])
+
+    const add = useCallback(async (secretKey : string, secretValue : string) : Promise<void> => {
+        
+            const newSecrets = secrets.filter(({Name}) => Name !== secretKey)
+            const jsonSecretString = `{ ${newSecrets.map(({Name, Value}) => `"${Name}": "${Value}"`)} ,"${secretKey}":"${secretValue}"}`;
+
+            const command = new UpdateSecretCommand({SecretId: appName, SecretString: jsonSecretString});
+            
+            const response = await client.send(command);
+            
+            if (response.$metadata.httpStatusCode === 200) {
+                setSecrets([...newSecrets, {Value: secretValue, Name: secretKey}])
+            }
+
+    }, [appName, secrets, client])
+
+    const deleteSecret = useCallback(async (secretKey: string) => {
+        const newSecrets = secrets.filter(s => s.Name !== secretKey)
+
+        const jsonSecretString = `{ ${newSecrets.map(({Name, Value}) => `"${Name}": "${Value}", `).join('').slice(0, -2)}}`;    
+        
+        const command = new UpdateSecretCommand({SecretId: appName, SecretString: jsonSecretString});
+        const response = await client.send(command);
+        if (response.$metadata.httpStatusCode === 200) {
+            setSecrets(newSecrets)
+        }
+    }, [appName, secrets, client])
+
     useEffect(() => {
-        (async () => {
-            await parseSecret(secretName, client, secrets)
-
-            setSecrets(secrets)
-            setLoading(false)
-            return {loading, secrets}
-        })();
+        refresh()
     }, []);
-    return {loading, secrets}
-}
-
-
-
-export const updateSecrets = async (secretKey : string, secretValue : string, appName : string, client : SecretsManagerClient) => {
-
-    const secrets = await getSecrets(appName, client)
-
-    const jsonSecretString = secrets.slice(0, -1)  + ',"' + secretKey + '":"' + secretValue + '"}';
-
-    const command = new UpdateSecretCommand({SecretId: appName, SecretString: jsonSecretString});
-    await client.send(command);
-
+    return {loading, secrets, refresh, add, delete: deleteSecret}
 }
